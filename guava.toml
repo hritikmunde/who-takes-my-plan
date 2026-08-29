@@ -1,0 +1,8 @@
+project_id = "gp-38a36f78-621d-4896-aab7-3ec451424299"
+org_id = "6a93489505f8725f3451706b"
+name = "who-takes-my-plan"
+call_direction = "inbound"
+base_image = "python-sandbox:3.14"
+tier = "guava-seed"
+replicas = 1
+enable_healthcheck = true

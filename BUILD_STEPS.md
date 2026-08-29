@@ -35,44 +35,68 @@ Do not spend the last 30 minutes on slides.**
 
 ---
 
-## The Guava API (from the event doc — this is real, don't guess)
+## The Guava API (verified against the installed scaffold, not the event doc)
 
 ```python
 import guava
 
 agent = guava.Agent(
-    name="who-takes-my-plan",
-    organization="Who Takes My Plan",
     purpose="Help callers find in-network doctors and hospitals",
 )
+# name/organization are NOT Agent() args — they live in guava.toml,
+# already set by `guava create who-takes-my-plan`.
 
 @agent.on_call_start
-def start(call):
+def start(call: guava.Call):
     call.set_task(
         "find_provider",
         objective="Find an in-network doctor matching their plan and need",
         checklist=[
-            guava.Field("plan", "Which insurance plan do they have?"),
-            guava.Field("need", "What kind of doctor or what body part hurts?"),
-            guava.Field("city", "What city or area are they in?"),
+            guava.Say("Hi, I can help you find an in-network doctor."),
+            guava.Field(
+                key="plan",
+                field_type="text",
+                description="Which insurance plan do they have?",
+            ),
+            guava.Field(
+                key="need",
+                field_type="text",
+                description="What kind of doctor or what body part hurts?",
+            ),
+            guava.Field(
+                key="city",
+                field_type="text",
+                description="What city or area are they in?",
+            ),
+            "Confirm back what you heard before looking anything up.",
         ],
     )
 
 @agent.on_task_complete("find_provider")
-def done(call):
+def done(call: guava.Call):
     plan = call.get_field("plan")
     # ... look up, speak results ...
     call.hangup()
 
-agent.chat()          # talk to it in your terminal
-agent.call_local()    # agent calls YOUR phone  <-- fastest path to a live call
-agent.listen_phone("+1...")  # agent answers a real number
+if __name__ == "__main__":
+    agent.chat()          # talk to it in your terminal
+    agent.call_local()    # agent calls YOUR phone  <-- fastest path to a live call
+    agent.listen_phone("+1...")  # agent answers a real number
 ```
 
-Run with `python agent.py` every time. The last line decides the mode.
+Entrypoint is **`main.py`** (that's what `guava create` generates and what
+`guava run` hardcodes — not `agent.py`). Run it with:
 
-Key concepts: **Agent → task → checklist of Fields → on_task_complete handler.**
-The checklist is how you get structure without a giant prompt. Use it.
+```bash
+guava run .
+```
+
+The last uncommented `agent.*()` call in `main.py` decides the mode.
+
+Key concepts: **Agent → task → checklist → `on_task_complete` handler.**
+Checklist items can be `guava.Field(key=, field_type=, description=, ...)`,
+`guava.Say("...")` for a scripted line, or a plain string instruction. The
+checklist is how you get structure without a giant prompt. Use it.
 
 ---
 
@@ -85,10 +109,10 @@ hours and installing for two hours.
 - [ ] `guava login` — **opens a browser, you must click through this yourself.**
       Claude Code can run the command but cannot complete the browser handoff.
 - [ ] `guava create` → name it `who-takes-my-plan`
-- [ ] `cd who-takes-my-plan && python agent.py` — confirm you can talk to the
-      stock agent in your terminal
-- [ ] Change `agent.chat()` to `agent.call_local()`, run again, **confirm your
-      phone actually rings.** This is the eligibility gate — prove it works tonight.
+- [ ] `guava run .` — confirm you can talk to the stock agent in your terminal
+- [ ] In `main.py`, comment out `agent.chat()` and uncomment `agent.call_local()`,
+      run again, **confirm your phone actually rings.** This is the eligibility
+      gate — prove it works tonight.
 - [ ] Push the scaffold to GitHub, add teammates as collaborators
 - [ ] Put this file and `CLAUDE.md` in the repo root
 
@@ -104,7 +128,7 @@ Voice agent helping elderly callers find in-network doctors and hospitals.
 ## Stack
 - Guava voice platform. The API is documented in BUILD_STEPS.md — follow that
   shape exactly (Agent, set_task, guava.Field checklist, on_task_complete).
-- Python. Everything lives in agent.py plus src/ helpers.
+- Python. Everything lives in main.py plus src/ helpers.
 - Mock provider data in data/providers.json. There is no live insurance API.
 
 ## Hard rules
@@ -158,7 +182,7 @@ Goal: something real to search.
 **Claude Code prompt:**
 > Read CLAUDE.md and Phase 2 of BUILD_STEPS.md. Build only that phase:
 > data/providers.json and src/providers.py with the lookup function and the
-> plain-language specialty mapping. Add a quick test. Don't touch agent.py.
+> plain-language specialty mapping. Add a quick test. Don't touch main.py.
 
 ---
 
