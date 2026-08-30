@@ -7,11 +7,28 @@ import logging
 
 import guava
 from guava import logging_utils
+from guava.commands import SendCallerTextCommand
 
 from src.conversation import extract_city_change
 from src.providers import lookup_with_status, KNOWN_PLANS
 
 logger = logging.getLogger("who_takes_my_plan")
+
+# Phase 4 (Option B): after the lookup, text the caller a written copy of the
+# results so an elderly caller on phone audio doesn't have to memorize names
+# and phone numbers.
+#
+# Two delivery paths. The default, SendCallerTextCommand, tells Guava to text
+# whoever is on the call — no phone-number handling on our side. If testing
+# shows it doesn't actually deliver (SMS may be gated behind Guava's
+# compliance approval, same as outbound dialing — see guava-docs.md line
+# 3755), flip SMS_VIA_CLIENT to True: that uses Client.send_sms() with the
+# caller's number, which Guava already gives us on call.call_info.
+#
+# >>> TEST SMS DELIVERY TO A REAL PHONE IN THE FIRST 10 MINUTES. <<< If it's
+# blocked, pivot to Option C (call.transfer(...)) rather than burning the
+# window here.
+SMS_VIA_CLIENT = False
 
 agent = guava.Agent(
     name="Alex",
@@ -45,6 +62,46 @@ def _no_match_instruction(city: str = "") -> str:
         f"doctor that wasn't given to you. Suggest they call their plan's "
         f"member services line for more options."
     )
+
+
+def _sms_body(matches: list[dict], city: str = "") -> str:
+    """Written copy of the same results the agent speaks. Uses only the
+    fields from providers.json — never invents a detail."""
+    if not matches:
+        return (
+            "Who Takes My Plan: no in-network match was found for your plan "
+            "and need. Please call the member services number on your "
+            "insurance card for more options."
+        )
+    lines = ["Who Takes My Plan - your in-network matches:"]
+    for i, p in enumerate(matches[:3], 1):
+        lines.append(
+            f"{i}. {p['name']}, {p['specialty']}\n"
+            f"   {p['address']}, {p['city']}\n"
+            f"   {p['phone']}"
+        )
+    lines.append("Call ahead to confirm they are taking new patients.")
+    return "\n".join(lines)
+
+
+def _send_summary_text(call: guava.Call, body: str) -> str:
+    """Text `body` to the caller. Returns the delivery path used, or raises
+    if it can't be sent (caller has no number, client not configured, etc.).
+    The caller of this function must swallow exceptions — a failed text must
+    not break the call."""
+    if not SMS_VIA_CLIENT:
+        call.send_command(SendCallerTextCommand(text=body))
+        return "send-caller-text command"
+
+    info = call.call_info
+    if getattr(info, "call_type", "") != "pstn" or not getattr(info, "from_number", None):
+        raise RuntimeError(f"no caller phone number available (call_info={info!r})")
+    guava.Client().send_sms(
+        from_number=info.to_number,   # our provisioned Guava number
+        to_number=info.from_number,   # the caller
+        message=body,
+    )
+    return "Client.send_sms"
 
 
 def _match_instruction(matches: list[dict], city_matched: bool) -> str:
@@ -128,6 +185,20 @@ def on_find_provider_complete(call: guava.Call):
     else:
         logger.info("No match for plan=%r need=%r city=%r", plan, need, city)
         call.send_instruction(_no_match_instruction(city))
+
+    # Phase 4 (Option B): also text the caller the results. The agent still
+    # speaks them above — this is an addition, not a replacement. A failed
+    # text must never break the call, so swallow everything and log it.
+    try:
+        path = _send_summary_text(call, _sms_body(matches, city))
+        logger.info("Texted caller a summary via %s", path)
+        call.send_instruction(
+            "Also tell the caller you have sent a text message to their "
+            "phone with the doctor names, addresses, and phone numbers, so "
+            "they do not need to write anything down."
+        )
+    except Exception:
+        logger.exception("Could not text the caller a summary; continuing the call")
 
     call.set_task(
         "wrap_up",
