@@ -8,6 +8,10 @@ KNOWN_PLANS = [
     "Blue Shield PPO",
     "Kaiser Senior Advantage",
     "Aetna Medicare",
+    "Cigna Medicare",
+    "UnitedHealthcare Medicare",
+    "Humana Gold",
+    "WellCare Advantage",
 ]
 
 KNOWN_SPECIALTIES = [
@@ -17,11 +21,23 @@ KNOWN_SPECIALTIES = [
     "orthopedics",
     "podiatry",
     "neurology",
+    "gastroenterology",
+    "pulmonology",
+    "endocrinology",
+    "dermatology",
+    "oncology",
+    "urology",
+    "rheumatology",
+    "nephrology",
+    "psychiatry",
+    "geriatrics",
+    "otolaryngology",
 ]
 
 # Plain-language phrase -> specialty. Checked as substrings against the
 # caller's free-text "need", longest phrase first so specific phrases
-# ("my hip") win over broader ones.
+# ("my hip", "kidney stone") win over broader/overlapping ones (joint pain
+# is orthopedics by default; arthritis specifically goes to rheumatology).
 SPECIALTY_KEYWORDS = {
     "cardiology": ["heart", "cardio", "chest pain"],
     "ophthalmology": ["eye", "eyes", "vision", "ophthalm"],
@@ -29,6 +45,17 @@ SPECIALTY_KEYWORDS = {
     "orthopedics": ["knee", "knees", "hip", "hips", "joint", "bone", "shoulder", "back pain", "ortho"],
     "neurology": ["headache", "head hurt", "head pain", "migraine", "seizure", "numbness", "nerve", "neuro"],
     "primary care": ["checkup", "check-up", "check up", "physical", "general doctor", "primary care"],
+    "gastroenterology": ["stomach", "gut", "digestive", "bowel", "colon", "acid reflux", "gastro"],
+    "pulmonology": ["lung", "lungs", "breathing", "shortness of breath", "asthma", "cough", "pulmonary"],
+    "endocrinology": ["diabetes", "thyroid", "hormone", "hormones", "blood sugar", "endocrine"],
+    "dermatology": ["skin", "rash", "mole", "acne", "derma"],
+    "oncology": ["cancer", "tumor", "chemo", "oncology"],
+    "urology": ["bladder", "urinary", "kidney stone", "prostate", "urology"],
+    "rheumatology": ["arthritis", "rheumatoid", "lupus", "rheumatology"],
+    "nephrology": ["kidney", "kidneys", "dialysis", "renal", "nephrology"],
+    "psychiatry": ["anxiety", "depression", "mental health", "psychiatric", "psychiatry"],
+    "geriatrics": ["geriatric", "geriatrics", "aging issues"],
+    "otolaryngology": ["ear", "nose", "throat", "sinus", "hearing", "ent ", "otolaryngology"],
 }
 
 

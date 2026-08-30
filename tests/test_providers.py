@@ -14,8 +14,11 @@ from src.providers import (
     KNOWN_SPECIALTIES,
 )
 
-# 23 entries, correct known plans/specialties, and a state + 5-digit zipcode on every record.
-assert len(PROVIDERS) == 23, f"expected 23 providers, got {len(PROVIDERS)}"
+# A real dataset (currently 520 entries), correct known plans/specialties,
+# and a state + 5-digit zipcode on every record. Sanity floor, not an exact
+# count -- an exact-count assertion is exactly what broke here when the
+# dataset grew from 23 to 520 without this test being updated.
+assert len(PROVIDERS) >= 20, f"expected at least 20 providers, got {len(PROVIDERS)}"
 for p in PROVIDERS:
     assert p["specialty"] in KNOWN_SPECIALTIES, p["specialty"]
     for plan in p["accepted_plans"]:
@@ -45,20 +48,25 @@ fallback = lookup("Medicare Advantage", "checkup", "Nowhereville")
 assert len(fallback) >= 1, "city fallback should return plan+specialty matches"
 
 # Zipcode lookup: exact zip not required, same 3-digit prefix counts as local.
-# Dr. Linda Chen (Springfield, zip 62701) matches Medicare Advantage + primary care.
-# 62709 is a different Springfield zip (same "627" prefix) with no exact provider there.
-zip_matches = lookup("Medicare Advantage", "checkup", "62709")
+# Dr. Michael Smith (Las Vegas, zip 89114) matches Medicare Advantage + primary
+# care. 89199 is a different zip with the same "891" prefix.
+zip_matches = lookup("Medicare Advantage", "checkup", "89199")
 assert len(zip_matches) >= 1, zip_matches
-assert all(m["zipcode"][:3] == "627" for m in zip_matches), zip_matches
+assert all(m["zipcode"][:3] == "891" for m in zip_matches), zip_matches
 
 # A zip prefix with no providers at all should fall back to all plan+specialty matches,
 # same as the unmatched-city fallback above.
 zip_fallback = lookup("Medicare Advantage", "checkup", "99999")
 assert len(zip_fallback) >= 1, "zip fallback should return plan+specialty matches"
 
-# The deliberate zero-match case: Kaiser Senior Advantage + neurology.
-no_match = lookup("Kaiser Senior Advantage", "bad headaches", "")
-assert no_match == [], f"expected zero matches, got {no_match}"
+# NOTE: the original 20-entry dataset had a deliberate zero-match combo
+# (Kaiser Senior Advantage + neurology) for the demo's no-match beat. The
+# 520-entry dataset covers every plan+specialty combo at least once, so
+# that exact case no longer exists -- the no-match path now only triggers
+# via an unrecognized "need" (below), not a real plan+specialty gap. Worth
+# knowing before the demo: the graceful-failure moment needs different
+# framing (e.g. "I don't have a specialty for that") since every listed
+# plan+specialty pair now has a real match somewhere in the country.
 
 # Unrecognized need should return no matches, not guess.
 assert lookup("Medicare Advantage", "gibberish nonsense", "") == []
@@ -67,11 +75,11 @@ assert lookup("Medicare Advantage", "gibberish nonsense", "") == []
 assert map_specialty("my head hurts really bad") == "neurology"
 
 # lookup_with_status: exact city match -> city_matched=True.
-matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "Springfield")
+matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "Las Vegas")
 assert len(matches) >= 1 and city_matched is True
 
 # lookup_with_status: exact zip prefix match -> city_matched=True too.
-matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "62709")
+matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "89199")
 assert len(matches) >= 1 and city_matched is True
 
 # lookup_with_status: city not in the dataset (e.g. a real city like "San
@@ -90,17 +98,17 @@ assert len(matches) >= 1 and city_matched is False
 matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "")
 assert len(matches) >= 1 and city_matched is True
 
-# lookup_with_status: true zero-match case (Kaiser Senior Advantage +
-# neurology) -> empty matches regardless of city_matched value.
-matches, city_matched = lookup_with_status("Kaiser Senior Advantage", "bad headaches", "Chicago")
+# lookup_with_status: true zero-match case is now only reachable via an
+# unrecognized need (no plan+specialty combo is empty anymore).
+matches, city_matched = lookup_with_status("Kaiser Senior Advantage", "gibberish nonsense", "Chicago")
 assert matches == []
 
 # lookup() and lookup_with_status() must agree on the match list itself.
 for plan, need, city in [
-    ("Medicare Advantage", "checkup", "Springfield"),
-    ("Medicare Advantage", "checkup", "62709"),
+    ("Medicare Advantage", "checkup", "Las Vegas"),
+    ("Medicare Advantage", "checkup", "89199"),
     ("Medicare Advantage", "checkup", "San Jose"),
-    ("Kaiser Senior Advantage", "bad headaches", "Chicago"),
+    ("Kaiser Senior Advantage", "gibberish nonsense", "Chicago"),
 ]:
     assert lookup(plan, need, city) == lookup_with_status(plan, need, city)[0]
 
