@@ -99,7 +99,10 @@ def on_call_start(call: guava.Call):
             guava.Field(
                 key="city",
                 field_type="text",
-                description="What city or area are they in?",
+                description=(
+                    "What city or zipcode are they in? Accept either a city "
+                    "name or a 5-digit zipcode, whichever the caller gives."
+                ),
             ),
             "If the caller asks you to repeat something or speak slower at "
             "any point during this call, do so patiently.",

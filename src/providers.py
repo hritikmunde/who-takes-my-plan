@@ -70,15 +70,35 @@ def _plan_matches(plan: str, accepted_plans: list[str]) -> bool:
     return any(plan_norm == p.strip().lower() for p in accepted_plans)
 
 
-def lookup_with_status(plan: str, need: str, city: str = "") -> tuple[list[dict], bool]:
-    """Find providers matching plan + need, preferring the given city.
+def _is_zipcode(text: str) -> bool:
+    """True if `text` looks like a 5-digit zipcode rather than a city name."""
+    return text.strip().isdigit() and len(text.strip()) == 5
 
-    Returns (matches, city_matched). `city_matched` is True when the
-    returned providers are actually in the requested city (or no city was
-    given), and False when they're a "nearest alternative" fallback from a
-    different city on the same plan+specialty — important to disclose
-    since two towns with the same name (or a city not in this dataset at
-    all) shouldn't be silently presented as exact matches.
+
+def _location_matches(location: str, provider: dict) -> bool:
+    """Match a caller-given city name or zipcode against one provider.
+
+    A zipcode matches on its first 3 digits (same area, not requiring the
+    exact zip) since this is mock data with no real geocoding. A city name
+    matches exactly, same as before.
+    """
+    location = location.strip()
+    if _is_zipcode(location):
+        return provider.get("zipcode", "")[:3] == location[:3]
+    return provider["city"].strip().lower() == location.lower()
+
+
+def lookup_with_status(plan: str, need: str, city: str = "") -> tuple[list[dict], bool]:
+    """Find providers matching plan + need, preferring the given city or zipcode.
+
+    `city` may be a city name or a 5-digit zipcode. Returns (matches,
+    city_matched). `city_matched` is True when the returned providers are
+    actually in the requested area (exact city, or same 3-digit zip prefix
+    — or no location was given at all), and False when they're a "nearest
+    alternative" fallback from elsewhere on the same plan+specialty —
+    important to disclose since two towns with the same name (or a
+    location not in this dataset at all) shouldn't be silently presented
+    as exact matches.
     """
     specialty = map_specialty(need)
     if specialty is None:
@@ -92,10 +112,9 @@ def lookup_with_status(plan: str, need: str, city: str = "") -> tuple[list[dict]
     if not city:
         return matches, True
 
-    city_norm = city.strip().lower()
-    city_matches = [p for p in matches if p["city"].strip().lower() == city_norm]
-    if city_matches:
-        return city_matches, True
+    local_matches = [p for p in matches if _location_matches(city, p)]
+    if local_matches:
+        return local_matches, True
 
     return matches, False
 
