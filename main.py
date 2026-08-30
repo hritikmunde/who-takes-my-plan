@@ -99,10 +99,10 @@ if __name__ == "__main__":
     logging_utils.configure_logging()
 
     # Run this to talk to your agent using your local audio device.
-    agent.call_local()
+    # agent.call_local()
 
     # Run this to attach your agent to a phone number. Call your agent's number to talk to it.
-    # agent.listen_phone("+15555555555")
+    agent.listen_phone("+14843175018")
 
     # Run this to receive a WebRTC link where you can talk to your agent in the browser.
     # agent.listen_webrtc()
