@@ -27,7 +27,7 @@ SPECIALTY_KEYWORDS = {
     "ophthalmology": ["eye", "eyes", "vision", "ophthalm"],
     "podiatry": ["foot", "feet", "toe", "toes", "ankle"],
     "orthopedics": ["knee", "knees", "hip", "hips", "joint", "bone", "shoulder", "back pain", "ortho"],
-    "neurology": ["headache", "migraine", "seizure", "numbness", "nerve", "neuro"],
+    "neurology": ["headache", "head hurt", "head pain", "migraine", "seizure", "numbness", "nerve", "neuro"],
     "primary care": ["checkup", "check-up", "check up", "physical", "general doctor", "primary care"],
 }
 
@@ -70,28 +70,40 @@ def _plan_matches(plan: str, accepted_plans: list[str]) -> bool:
     return any(plan_norm == p.strip().lower() for p in accepted_plans)
 
 
-def lookup(plan: str, need: str, city: str = "") -> list[dict]:
+def lookup_with_status(plan: str, need: str, city: str = "") -> tuple[list[dict], bool]:
     """Find providers matching plan + need, preferring the given city.
 
-    Returns providers whose specialty matches `need` (via plain-language
-    mapping) and whose accepted_plans includes `plan`. If `city` is given
-    and there are matches in that city, only those are returned; otherwise
-    all plan+specialty matches are returned regardless of city (a "nearest
-    alternative" fallback for the no-exact-match case).
+    Returns (matches, city_matched). `city_matched` is True when the
+    returned providers are actually in the requested city (or no city was
+    given), and False when they're a "nearest alternative" fallback from a
+    different city on the same plan+specialty — important to disclose
+    since two towns with the same name (or a city not in this dataset at
+    all) shouldn't be silently presented as exact matches.
     """
     specialty = map_specialty(need)
     if specialty is None:
-        return []
+        return [], True
 
     matches = [
         p for p in PROVIDERS
         if p["specialty"] == specialty and _plan_matches(plan, p["accepted_plans"])
     ]
 
-    if city:
-        city_norm = city.strip().lower()
-        city_matches = [p for p in matches if p["city"].strip().lower() == city_norm]
-        if city_matches:
-            return city_matches
+    if not city:
+        return matches, True
 
+    city_norm = city.strip().lower()
+    city_matches = [p for p in matches if p["city"].strip().lower() == city_norm]
+    if city_matches:
+        return city_matches, True
+
+    return matches, False
+
+
+def lookup(plan: str, need: str, city: str = "") -> list[dict]:
+    """Find providers matching plan + need, preferring the given city.
+
+    See lookup_with_status() for the city-fallback semantics this wraps.
+    """
+    matches, _ = lookup_with_status(plan, need, city)
     return matches

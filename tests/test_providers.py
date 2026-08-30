@@ -5,7 +5,14 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from src.providers import lookup, map_specialty, PROVIDERS, KNOWN_PLANS, KNOWN_SPECIALTIES
+from src.providers import (
+    lookup,
+    lookup_with_status,
+    map_specialty,
+    PROVIDERS,
+    KNOWN_PLANS,
+    KNOWN_SPECIALTIES,
+)
 
 # 20 entries, correct known plans/specialties.
 assert len(PROVIDERS) == 20, f"expected 20 providers, got {len(PROVIDERS)}"
@@ -41,5 +48,37 @@ assert no_match == [], f"expected zero matches, got {no_match}"
 
 # Unrecognized need should return no matches, not guess.
 assert lookup("Medicare Advantage", "gibberish nonsense", "") == []
+
+# Regression: "head hurts" (not just "headache") must map to neurology.
+assert map_specialty("my head hurts really bad") == "neurology"
+
+# lookup_with_status: exact city match -> city_matched=True.
+matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "Springfield")
+assert len(matches) >= 1 and city_matched is True
+
+# lookup_with_status: city not in the dataset (e.g. a real city like "San
+# Jose" that two towns could share the name of) -> falls back to
+# plan+specialty matches, but must say so via city_matched=False. This is
+# the "don't silently claim a match in the caller's exact city" guarantee.
+matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "San Jose")
+assert len(matches) >= 1 and city_matched is False
+
+# lookup_with_status: no city given at all -> not a "mismatch", just no
+# preference, so city_matched=True (nothing to disclose).
+matches, city_matched = lookup_with_status("Medicare Advantage", "checkup", "")
+assert len(matches) >= 1 and city_matched is True
+
+# lookup_with_status: true zero-match case (Kaiser Senior Advantage +
+# neurology) -> empty matches regardless of city_matched value.
+matches, city_matched = lookup_with_status("Kaiser Senior Advantage", "bad headaches", "Chicago")
+assert matches == []
+
+# lookup() and lookup_with_status() must agree on the match list itself.
+for plan, need, city in [
+    ("Medicare Advantage", "checkup", "Springfield"),
+    ("Medicare Advantage", "checkup", "San Jose"),
+    ("Kaiser Senior Advantage", "bad headaches", "Chicago"),
+]:
+    assert lookup(plan, need, city) == lookup_with_status(plan, need, city)[0]
 
 print("All provider lookup tests passed.")

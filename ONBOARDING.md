@@ -37,10 +37,16 @@ Verified against the installed CLI (`guava 0.40.0`) and the actual scaffold
 import guava
 
 agent = guava.Agent(
+    name="Alex",
+    organization="Who Takes My Plan",
     purpose="Help callers find in-network doctors and hospitals",
 )
-# name/organization are NOT Agent() constructor args.
-# They live in guava.toml (already set: name = "who-takes-my-plan").
+# name/organization ARE valid Agent() constructor args (corrected
+# 2026-08-29 — an earlier version of this doc said otherwise, which was
+# wrong). Leave them unset and the platform has the LLM improvise a name —
+# a live call actually produced "Hi, I'm Grace, a virtual assistant for
+# Unknown." guava.toml's `name` field is the Guava *project* name, unrelated
+# to what the agent calls itself to callers.
 
 @agent.on_call_start
 def start(call: guava.Call):

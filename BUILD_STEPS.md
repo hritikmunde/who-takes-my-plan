@@ -41,10 +41,17 @@ Do not spend the last 30 minutes on slides.**
 import guava
 
 agent = guava.Agent(
+    name="Alex",
+    organization="Who Takes My Plan",
     purpose="Help callers find in-network doctors and hospitals",
 )
-# name/organization are NOT Agent() args — they live in guava.toml,
-# already set by `guava create who-takes-my-plan`.
+# CORRECTION (found live, 2026-08-29): name/organization ARE valid Agent()
+# args — the real SDK Reference documents them ("the name the agent uses to
+# identify itself to callers" / "the organization the agent represents").
+# Leaving them unset doesn't fall back to guava.toml's project name — the
+# platform has the LLM improvise something instead. In a live test call
+# this produced "Hi, I'm Grace, a virtual assistant for Unknown." Always
+# set both explicitly.
 
 @agent.on_call_start
 def start(call: guava.Call):
