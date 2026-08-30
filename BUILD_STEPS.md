@@ -155,21 +155,30 @@ Voice agent helping elderly callers find in-network doctors and hospitals.
 
 ---
 
-## Phase 1 — Make it talk (6:30–6:45)
+## Phase 1 — Make it talk (6:30–6:45) — ✅ DONE, eligibility confirmed
 
 Goal: confirm the environment works and you can talk to your agent, before
-anything else exists. **This is a local audio sanity check, not eligibility**
-— `call_local()` uses your laptop's mic/speakers, not a real phone call. See
-the billing note in Risks for what's still needed for a live call.
+anything else exists. **`call_local()` is a local audio sanity check, not
+eligibility** — it uses your laptop's mic/speakers, not a real phone call.
 
-- [ ] `agent.call_local()`, run, answer, say hello, hang up
-- [ ] `git commit -m "talking locally"` immediately — this is your floor
-- [ ] Edit one line of the agent's purpose, rerun, call again — confirm the edit
-      loop is fast
-- [ ] Once a number is provisioned (see Risks), swap in `agent.listen_phone(...)`
-      and place one real call — **that's the actual eligibility gate.**
+`call_local()` itself was blocked the whole time by the billing issue (see
+below), so we skipped straight to the real thing once billing cleared:
 
-**If this isn't working by 6:50, stop and go to the office hours desk.**
+- [x] Finished billing setup on the Guava dashboard (was blocking everything,
+      including `call_local()`)
+- [x] `guava numbers list` → confirmed a real provisioned number:
+      `+1 (484) 317-5018`
+- [x] In `main.py`, commented out `agent.call_local()`, uncommented
+      `agent.listen_phone("+14843175018")`
+- [x] `guava run .` — agent started listening on the number
+- [x] **Called `+1 (484) 317-5018` from a real phone.** Log confirms a real
+      PSTN call: accepted, asked a question, agent answered from RAG,
+      clean `user-hangup`.
+- [x] `git commit -m "ringing: live inbound call confirmed"`, pushed
+
+**Eligibility gate cleared — the agent has answered a real live call.** The
+agent is still the stock intro agent at this point (answers questions about
+Guava itself); Phase 2/3 wire in the actual provider-lookup behavior.
 
 ---
 
@@ -290,7 +299,6 @@ You get 3 judges, 2 minutes each, they come to you.
 |---|---|
 | Install eats build time | Done at home, tonight, before you leave |
 | `guava login` browser handoff fails | Pre-provisioned accounts at office hours desk |
-| **Billing setup blocks phone number provisioning** — `guava numbers list`/`buy` currently returns `403 package_setup_unfinished` | Finish billing at the Guava dashboard (app.goguava.ai) **tonight, before the venue** — this blocks `listen_phone()` and therefore the eligibility gate. If stuck, office hours desk. |
 | Agent invents a fake doctor | CLAUDE.md rule + read only from JSON + test for it |
 | Works in terminal, breaks on phone | Test on real calls from Phase 3 onward, not at 8:20 |
 | Scope creep into real eligibility logic | Mock data only. Not tonight. |
