@@ -55,28 +55,41 @@ def start(call: guava.Call):
             guava.Say("Hi, I can help you find an in-network doctor."),
             guava.Field(
                 key="plan",
-                field_type="text",
+                field_type="multiple_choice",
+                choices=["Medicare Advantage", "Blue Shield PPO",
+                         "Kaiser Senior Advantage", "Aetna Medicare"],
                 description="Which insurance plan do they have?",
             ),
+            "Confirm back the plan you heard before moving on.",
             guava.Field(
                 key="need",
                 field_type="text",
                 description="What kind of doctor or what body part hurts?",
             ),
+            "Confirm back what you heard before moving on.",
             guava.Field(
                 key="city",
                 field_type="text",
                 description="What city or area are they in?",
             ),
-            "Confirm back what you heard before looking anything up.",
         ],
     )
 
 @agent.on_task_complete("find_provider")
 def done(call: guava.Call):
     plan = call.get_field("plan")
-    # ... look up, speak results ...
-    call.hangup()
+    need, city = call.get_field("need"), call.get_field("city")
+    matches = lookup(plan, need, city)
+    if matches:
+        doc = matches[0]
+        call.send_instruction(
+            f"Tell the caller you found {doc['name']}, a {doc['specialty']} at "
+            f"{doc['address']}, phone {doc['phone']}. Speak the phone number "
+            f"digit by digit, slowly."
+        )
+    else:
+        call.send_instruction("Tell the caller plainly that no match was found.")
+    call.hangup("Ask if they need anything else, then close warmly.")
 
 if __name__ == "__main__":
     agent.chat()          # talk to it in your terminal
@@ -220,12 +233,19 @@ Flow:
 6. Offer to repeat
 7. Close warmly
 
-- [ ] Wire the checklist Fields to the lookup in `on_task_complete`
-- [ ] Confirm-back after each field
-- [ ] No-match path: say it plainly, offer nearest alternative or suggest calling
-      their plan's member services
+- [ ] Wire the checklist Fields to `src/providers.lookup()` in `on_task_complete`
+- [ ] Confirm-back after each field (plain-string checklist item right after
+      each `Field` — see the updated API section example above)
+- [ ] **Speak the looked-up result with `call.send_instruction(...)`** — not
+      `guava.Say` (that's fixed text, defined before the lookup runs) and not
+      a return value (`on_task_complete` has no return channel). Build the
+      instruction string from the `lookup()` result, e.g. include name,
+      specialty, address, phone, and "read the phone number digit by digit."
+- [ ] No-match path: `call.send_instruction("Tell the caller plainly no match
+      was found...")`. Never pad with a guess.
 - [ ] "Can you repeat that" / "slower please"
-- [ ] Read phone numbers digit by digit with pauses
+- [ ] Close with `call.hangup("Ask if they need anything else, then close
+      warmly.")` — hangup's argument is an instruction, not verbatim text.
 - [ ] **Test over a real call, not just `agent.chat()`.** Terminal-perfect flows
       fall apart on phone audio.
 
@@ -242,17 +262,31 @@ Flow:
 Technical complexity is a heaviest-weight criterion. Pick **ONE**. Only if
 Phase 3 works end to end on a real call.
 
-**A — Live availability callback (strongest signal)**
+**Verified against the real docs (2026-08-29): lead with C, not A.**
+`call.transfer(destination, instructions)` is fully documented, simple, and
+callable straight from `on_task_complete` — no extra setup found. Outbound
+calling (needed for A) requires Guava's **Outbound Dialing Permissions
+Request** compliance approval per the docs — unlikely to clear tonight unless
+it's already been granted. **Check the Compliance page on the Guava dashboard
+now** if you want to keep A alive; otherwise go straight to C.
+
+**C — Warm transfer to the office (do this first — verified low-risk)**
+`call.transfer("+1...", "Let the caller know you're transferring them to the
+doctor's office to confirm they're taking new patients.")`. Real technical
+complexity (live call handoff), well-documented, no compliance step found.
+
+**A — Live availability callback (only if outbound is pre-approved)**
 After finding a match, the agent places a *second* real outbound call to the
 doctor's office to ask if they're taking new patients, then reports back.
 Two live calls in one flow. A teammate on a second phone plays the front desk.
-This is the one judges will remember on technical complexity.
+Impressive if it works, but confirm compliance approval and that a single
+agent process can hold both an inbound and outbound call before committing
+build time to it.
 
 **B — Text them the results**
-Caller hangs up with the list on their phone. Small, reliable, real user value.
-
-**C — Warm transfer to the office**
-Only if Guava supports transfer — check first, don't discover this at 8:15.
+Caller hangs up with the list on their phone. SMS is documented as a linked
+page we haven't verified in detail — check it's not gated the same way as
+outbound calling before relying on it.
 
 - [ ] Build one. Test on a real call. Commit.
 
