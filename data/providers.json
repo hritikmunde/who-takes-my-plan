@@ -1,0 +1,182 @@
+[
+  {
+    "name": "Dr. Linda Chen",
+    "specialty": "primary care",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO", "Aetna Medicare"],
+    "address": "100 Main St",
+    "city": "Springfield",
+    "phone": "217-555-0101",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Robert Klein",
+    "specialty": "primary care",
+    "accepted_plans": ["Kaiser Senior Advantage", "Blue Shield PPO"],
+    "address": "220 Oak Ave",
+    "city": "Springfield",
+    "phone": "217-555-0102",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Maria Gomez",
+    "specialty": "primary care",
+    "accepted_plans": ["Medicare Advantage", "Aetna Medicare", "Kaiser Senior Advantage"],
+    "address": "45 Elm St",
+    "city": "Riverside",
+    "phone": "217-555-0103",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. James Patel",
+    "specialty": "primary care",
+    "accepted_plans": ["Blue Shield PPO", "Kaiser Senior Advantage"],
+    "address": "12 Birch Rd",
+    "city": "Riverside",
+    "phone": "217-555-0104",
+    "accepting_new_patients": false
+  },
+  {
+    "name": "Dr. Susan Lee",
+    "specialty": "cardiology",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO"],
+    "address": "300 Heart Ln",
+    "city": "Springfield",
+    "phone": "217-555-0201",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Anthony Ruiz",
+    "specialty": "cardiology",
+    "accepted_plans": ["Aetna Medicare", "Kaiser Senior Advantage"],
+    "address": "88 Pulse Ave",
+    "city": "Springfield",
+    "phone": "217-555-0202",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Karen Wu",
+    "specialty": "cardiology",
+    "accepted_plans": ["Medicare Advantage", "Aetna Medicare"],
+    "address": "15 Cardio Ct",
+    "city": "Riverside",
+    "phone": "217-555-0203",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Thomas Byrne",
+    "specialty": "cardiology",
+    "accepted_plans": ["Blue Shield PPO"],
+    "address": "402 Vessel Way",
+    "city": "Riverside",
+    "phone": "217-555-0204",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Angela Kim",
+    "specialty": "ophthalmology",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO", "Kaiser Senior Advantage"],
+    "address": "9 Vision Blvd",
+    "city": "Springfield",
+    "phone": "217-555-0301",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Peter Novak",
+    "specialty": "ophthalmology",
+    "accepted_plans": ["Aetna Medicare"],
+    "address": "77 Eye St",
+    "city": "Riverside",
+    "phone": "217-555-0302",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Rachel Ford",
+    "specialty": "ophthalmology",
+    "accepted_plans": ["Medicare Advantage", "Aetna Medicare"],
+    "address": "33 Retina Rd",
+    "city": "Springfield",
+    "phone": "217-555-0303",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Daniel Osei",
+    "specialty": "orthopedics",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO", "Aetna Medicare"],
+    "address": "500 Joint Ave",
+    "city": "Springfield",
+    "phone": "217-555-0401",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Nancy Diaz",
+    "specialty": "orthopedics",
+    "accepted_plans": ["Kaiser Senior Advantage", "Blue Shield PPO"],
+    "address": "61 Bone St",
+    "city": "Riverside",
+    "phone": "217-555-0402",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Victor Huang",
+    "specialty": "orthopedics",
+    "accepted_plans": ["Medicare Advantage", "Kaiser Senior Advantage"],
+    "address": "19 Hip Way",
+    "city": "Springfield",
+    "phone": "217-555-0403",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Grace Okafor",
+    "specialty": "podiatry",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO"],
+    "address": "8 Foot Ct",
+    "city": "Springfield",
+    "phone": "217-555-0501",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Samuel Reyes",
+    "specialty": "podiatry",
+    "accepted_plans": ["Aetna Medicare", "Kaiser Senior Advantage"],
+    "address": "271 Heel Rd",
+    "city": "Riverside",
+    "phone": "217-555-0502",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Olivia Brandt",
+    "specialty": "podiatry",
+    "accepted_plans": ["Medicare Advantage", "Aetna Medicare"],
+    "address": "14 Ankle Ave",
+    "city": "Springfield",
+    "phone": "217-555-0503",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Ethan Marsh",
+    "specialty": "neurology",
+    "accepted_plans": ["Medicare Advantage", "Blue Shield PPO"],
+    "address": "600 Nerve Blvd",
+    "city": "Springfield",
+    "phone": "217-555-0601",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Priya Nair",
+    "specialty": "neurology",
+    "accepted_plans": ["Aetna Medicare", "Blue Shield PPO"],
+    "address": "45 Neuron St",
+    "city": "Riverside",
+    "phone": "217-555-0602",
+    "accepting_new_patients": true
+  },
+  {
+    "name": "Dr. Charles Ito",
+    "specialty": "neurology",
+    "accepted_plans": ["Medicare Advantage", "Aetna Medicare"],
+    "address": "88 Brain Ave",
+    "city": "Springfield",
+    "phone": "217-555-0603",
+    "accepting_new_patients": true
+  }
+]
