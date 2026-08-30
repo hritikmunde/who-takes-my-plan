@@ -80,9 +80,14 @@ def done(call: guava.Call):
 
 if __name__ == "__main__":
     agent.chat()          # talk to it in your terminal
-    agent.call_local()    # agent calls YOUR phone  <-- fastest path to a live call
-    agent.listen_phone("+1...")  # agent answers a real number
+    agent.call_local()    # talk to it over your laptop's mic/speakers — NOT a real call
+    agent.listen_phone("+1...")  # agent answers a REAL phone number <-- this is the live call
 ```
+
+`call_local()` uses your computer's local audio device. It does not dial your
+phone or place a telephony call — it does not satisfy the "must place or
+answer a live call" eligibility rule. Only `listen_phone()` (inbound, needs a
+provisioned number) or `call_phone()` (outbound) go over real telephony.
 
 Entrypoint is **`main.py`** (that's what `guava create` generates and what
 `guava run` hardcodes — not `agent.py`). Run it with:
@@ -111,8 +116,10 @@ hours and installing for two hours.
 - [ ] `guava create` → name it `who-takes-my-plan`
 - [ ] `guava run .` — confirm you can talk to the stock agent in your terminal
 - [ ] In `main.py`, comment out `agent.chat()` and uncomment `agent.call_local()`,
-      run again, **confirm your phone actually rings.** This is the eligibility
-      gate — prove it works tonight.
+      run again, confirm you can talk to it over your laptop's mic/speakers.
+      **This is a local audio test only — it does not satisfy the eligibility
+      rule.** For that you need a provisioned number and `agent.listen_phone()`;
+      see the billing note in Risks below.
 - [ ] Push the scaffold to GitHub, add teammates as collaborators
 - [ ] Put this file and `CLAUDE.md` in the repo root
 
@@ -148,14 +155,19 @@ Voice agent helping elderly callers find in-network doctors and hospitals.
 
 ---
 
-## Phase 1 — Make it ring (6:30–6:45)
+## Phase 1 — Make it talk (6:30–6:45)
 
-Goal: your phone rings, you talk to your agent, before anything else exists.
+Goal: confirm the environment works and you can talk to your agent, before
+anything else exists. **This is a local audio sanity check, not eligibility**
+— `call_local()` uses your laptop's mic/speakers, not a real phone call. See
+the billing note in Risks for what's still needed for a live call.
 
 - [ ] `agent.call_local()`, run, answer, say hello, hang up
-- [ ] `git commit -m "ringing"` immediately — this is your floor, you're now eligible
+- [ ] `git commit -m "talking locally"` immediately — this is your floor
 - [ ] Edit one line of the agent's purpose, rerun, call again — confirm the edit
       loop is fast
+- [ ] Once a number is provisioned (see Risks), swap in `agent.listen_phone(...)`
+      and place one real call — **that's the actual eligibility gate.**
 
 **If this isn't working by 6:50, stop and go to the office hours desk.**
 
@@ -210,8 +222,9 @@ Flow:
 
 **Claude Code prompt:**
 > Phase 3 of BUILD_STEPS.md. Wire the checklist to src/providers.lookup and
-> speak the results. Follow the elderly-caller rules in CLAUDE.md. Keep
-> agent.call_local() so I can test on my phone.
+> speak the results. Follow the elderly-caller rules in CLAUDE.md. Use
+> agent.listen_phone(...) with our provisioned number so I can test on a real
+> call, not just agent.call_local().
 
 ---
 
@@ -277,6 +290,7 @@ You get 3 judges, 2 minutes each, they come to you.
 |---|---|
 | Install eats build time | Done at home, tonight, before you leave |
 | `guava login` browser handoff fails | Pre-provisioned accounts at office hours desk |
+| **Billing setup blocks phone number provisioning** — `guava numbers list`/`buy` currently returns `403 package_setup_unfinished` | Finish billing at the Guava dashboard (app.goguava.ai) **tonight, before the venue** — this blocks `listen_phone()` and therefore the eligibility gate. If stuck, office hours desk. |
 | Agent invents a fake doctor | CLAUDE.md rule + read only from JSON + test for it |
 | Works in terminal, breaks on phone | Test on real calls from Phase 3 onward, not at 8:20 |
 | Scope creep into real eligibility logic | Mock data only. Not tonight. |
